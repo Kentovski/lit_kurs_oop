@@ -1,96 +1,59 @@
-# -*- coding: utf-8 -*-
-"""
-Задание: Суть в том, чтоб отрефакторить данный пример (а лучше начать своё сначала) таким образом, чтоб
-в конечном итоге у вас был объект House со всем внутренностями.
-Сейчас есть видимая проблема с этим кодом (помимо того, что он не делиет ничего полезного и не работает) -
-указание координат комнаты для дома, и координат мебели для комнаты
-И если хватит времени - подготовить почву для экспорта-импорта этих объектов (или объекта. я ещё не решил)
-"""
-from abc import ABCMeta, abstractmethod
+# /usr/bin/python3
+
+# MELNIKOV ILYA
+
+import json
 
 
-class VolumeMixin(object):
-    """
-    mixin, который предоставляет свойство {size},
-    и рассчитывает его на основе полей класса
-    (тут я имею ввиду вн. объём)
-    """
-
-    @property
-    def volume(self):
-        """
-        тут мы можем делегировать вызов к self.get_volume()
-        для расчёта размера, например House может реализовать это как сумму всех комнат + чердак, если есть
-        или просто переопределить это свойство в наследниках
-        """
-        return self.get_volume()
-
-    def get_volume(self):
-        """
-        Так делать необязательно, но может оказаться полезным,
-        если мы хотим иметь больше контроля над свойством в будущем
-        """
-        pass
+class House:
+    def __init__(self, adress, floors, rooms):
+        self.adress = adress
+        self.floors = floors
+        self.rooms = rooms
 
 
-class WeightMixin(object):
-    pass
-
-
-class Furniture(WeightMixin, object):
-    """
-    объект мебели, в зависимости от требуемого уровня детализации - можно ввести подклассы для каждого типа мебели
-    можно домешать сюда Volume и предоставить объём, если мы планируем его использовать
-    ---
-    Я подмешал сюда WeightMixin, чтоб показать, что у каждого типа мебели будет вес
-    """
-    material = None
-
-    def __init__(self, material):
-        self.material = material
-
-
-class Table(Furniture):
-    """
-    Стол имеет какую-то особенность
-    """
-    pass
-
-
-class Chair(Furniture):
-    pass
-
-
-class Refrigerator(Furniture):
-    """
-    Для классов такого типа можно создать ещё один подтип, например Appliance, и наследовать всё от него
-    """
-    pass
-
-
-class Room(VolumeMixin, object):
-    """
-    базовый класс для всех комнат
-    Решение о том, где хранить координаты мебели и дверей/окон остаются за вами
-    Вы можете создать ещё один слой, например ObjectsWithLocation,
-    который будет хранить объект, его родителя и координаты, но выбор за вами
-    """
-    furniture = None
-    # Тут под окнам могут подразумеваться так-же двери
-    windows = []
-
-    def __init__(self, furniture):
+class Room:
+    def __init__(self, coord, height, width, length, windows, doors, furniture):
+        self.coord = coord
+        self.height = height
+        self.width = width
+        self.length = length
+        self.windows = windows
+        self.doors = doors
         self.furniture = furniture
 
-    @property
-    def volume(self):
-        pass
+
+class Windows:
+    def __init__(self, coords, height, width, material, mode):
+        self.coords = coords
+        self.height = height
+        self.width = width
+        self.material = material
+        self.mode = mode
+
+    def open(self):
+        self.mode = True
+
+    def turn_off(self):
+        self.mode = False
+
+
+class Doors:
+    def __init__(self, coords, height, width, material, mode):
+        self.coords = coords
+        self.height = height
+        self.width = width
+        self.material = material
+        self.mode = mode
+
+    def open(self):
+        self.mode = True
+
+    def turn_off(self):
+        self.mode = False
 
 
 class Kitchen(Room):
-    """
-    Тоже какие-то особые свойства
-    """
     pass
 
 
@@ -98,65 +61,93 @@ class Bedroom(Room):
     pass
 
 
-
-class House(WeightMixin, VolumeMixin, object):
-    rooms = None
-    # Какие-то дополнительные свойства
-    properties = None
-
-    def __init__(self, rooms, properties):
-        self.rooms = rooms
-        self.properties = properties
-
-    @property
-    def volume(self):
-        """
-        Сейчас объём дома == объёму всех комнат входящих в него
-        т.е. мы не учитываем ещё многих вещей
-        """
-        return sum([room.volume for room in self.rooms])
-
-
-house = House([
-    Kitchen([
-        Refrigerator(),
-    ]),
-    Bedroom([
-        Chair(),
-        Table(),
-    ]),
-])
-
-
-class Encoder(object):
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def load(self, data):
-        """
-        Загружает данные из строки и возвращает сконструированный объект
-        :param data:
-        :return: Получившийся объект
-        """
-        pass
-
-    @abstractmethod
-    def dump(self, obj):
-        """
-        ПОлучив объект - возвращает строку в каком-либо формате
-        :param obj:
-        :return:
-        """
-        pass
-
-
-class JSONEncoder(Encoder):
+class Bathroom(Room):
     pass
 
 
-class YAMLEncoder(Encoder):
-    """
-    Тоже самое, только используя yaml
-    """
+class Furniture:
+    def __init__(self, coord, height, width, length, material, color):
+        self.coord = coord
+        self.height = height
+        self.width = width
+        self.length = length
+        self.material = material
+        self.color = color
+
+
+class Chair(Furniture):
     pass
 
+
+class Table(Furniture):
+    pass
+
+
+class Bed(Furniture):
+    pass
+
+
+class Toilet(Furniture):
+    pass
+
+
+class Device(Furniture):
+    def __init__(self, coord, height, width, length, material, color, kw_per_hour, mode):
+        super().__init__(coord, height, width, length, material, color)
+        self.kw_per_hour = kw_per_hour
+        self.mode = mode
+
+    def turn_on(self):
+        self.mode = True
+
+    def turn_off(self):
+        self.mode = False
+
+
+class Refrigerator(Device):
+    pass
+
+
+class Oven(Device):
+    pass
+
+
+"""
+def SaveToJson(data, file_path):
+    file = open(file_path, 'w')
+    file.write(json.dumps(data))
+    file.close()
+
+
+def LoadFrom(file_path):
+    file = open(file_path, 'r')
+    text = file.read()
+    file.close()
+    jsn = json.loads(text)
+    print(jsn)
+"""
+
+def main():
+    my_house = House('666 Svistunovo st.', 1, [
+                     Kitchen([0, 0, 0], 200, 500, 500,
+                             Windows([50, 30, 20], 150, 50, 'Wood', False),
+                             Doors([50, 30, 20], 150, 50, 'Wood', False),
+                             [Chair([50, 30, 20], 50, 30, 30, 'Plastic', 'Black'),
+                              Chair([50, 30, 20], 50, 30, 30, 'Plastic', 'Black'),
+                              Chair([50, 30, 20], 50, 30, 30, 'Plastic', 'Black'),
+                              Table([50, 30, 20], 50, 30, 30, 'Wood', 'Brown'),
+                              Refrigerator([50, 30, 20], 50, 30, 30, 'Metall', 'White', 500, False),
+                              Oven([50, 30, 20], 50, 30, 30, 'Metall', 'Brown', 500, False)
+                              ]),
+                     Bedroom([0, 0, 0], 200, 500, 500,
+                             Windows([50, 30, 20], 150, 50, 'Wood', False),
+                             Doors([50, 30, 20], 150, 50, 'Wood', False),
+                             Bed([50, 30, 20], 50, 30, 30, 'Wood', 'Black')),
+                     Bathroom([0, 0, 0], 200, 500, 500, 0,
+                               Doors([50, 30, 20], 150, 50, 'Wood', False),
+                               Toilet([50, 30, 20], 50, 30, 30, 'Wood', 'Black'))
+                     ])
+
+
+if __name__ == '__main__':
+    main()
